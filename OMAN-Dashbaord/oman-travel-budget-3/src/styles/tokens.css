@@ -1,0 +1,78 @@
+:root {
+  /* Farben */
+  --color-primary: #12233F;       /* dunkles Blau */
+  --color-primary-light: #2F5EA8; /* Interaktionsblau */
+  --color-bg: #F5F6F8;            /* sehr helles Grau */
+  --color-surface: #FFFFFF;
+  --color-text: #101828;
+  --color-text-muted: #667085;
+  --color-border: #E4E7EC;
+  --color-positive: #2E9E6D;      /* dezentes Grün */
+  --color-positive-bg: #E7F5EF;
+  --color-warning: #B5842A;
+  --color-warning-bg: #FBF1DE;
+  --color-danger: #D64545;        /* Rot nur für Überschreitung */
+  --color-danger-bg: #FBEAEA;
+
+  /* Typografie */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-numeric: -apple-system, BlinkMacSystemFont, 'SF Pro Display', ui-rounded, Roboto, sans-serif;
+
+  /* Layout */
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04), 0 4px 16px rgba(16, 24, 40, 0.06);
+  --max-width: 1100px;
+  --nav-height: 64px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+body {
+  padding-bottom: calc(var(--nav-height) + var(--safe-bottom));
+}
+
+#root {
+  max-width: var(--max-width);
+  margin: 0 auto;
+}
+
+h1, h2, h3, p {
+  margin: 0;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input, select, textarea {
+  font-family: inherit;
+  font-size: 16px; /* verhindert Zoom beim Fokus auf iOS Safari */
+}
+
+::selection {
+  background: var(--color-primary-light);
+  color: white;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
