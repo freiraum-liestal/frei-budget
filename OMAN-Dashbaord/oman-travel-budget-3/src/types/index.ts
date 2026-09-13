@@ -78,7 +78,5 @@ export interface BudgetProjection {
   usagePercent: number
   averagePerDay: number
   dailyBudgetRemaining: number
-  projectedTotal: number
-  projectedDifference: number
   status: BudgetStatus
 }
