@@ -34,8 +34,8 @@ export function calculateBudgetProjection(trip: Trip, expenses: Expense[]): Budg
   const averagePerDay = daysElapsed > 0 ? spent / daysElapsed : 0
   const dailyBudgetRemaining = daysRemaining > 0 ? Math.max(remaining, 0) / daysRemaining : Math.max(remaining, 0)
 
+  // Projektion nur noch intern, um den Status für die Fortschrittsbalken-Farbe zu bestimmen.
   const projectedTotal = averagePerDay > 0 ? averagePerDay * daysTotal : spent
-  const projectedDifference = trip.budgetCHF - projectedTotal
 
   let status: BudgetStatus = 'good'
   if (projectedTotal > trip.budgetCHF) {
@@ -53,8 +53,6 @@ export function calculateBudgetProjection(trip: Trip, expenses: Expense[]): Budg
     usagePercent: round1(usagePercent),
     averagePerDay: round2(averagePerDay),
     dailyBudgetRemaining: round2(dailyBudgetRemaining),
-    projectedTotal: round2(projectedTotal),
-    projectedDifference: round2(projectedDifference),
     status
   }
 }
