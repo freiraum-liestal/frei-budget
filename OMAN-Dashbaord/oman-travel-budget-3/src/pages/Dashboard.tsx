@@ -1,5 +1,4 @@
 import { useApp } from '../context/AppContext'
-import StatusBadge from '../components/StatusBadge'
 import SyncBadge from '../components/SyncBadge'
 import { ExpenseRow } from '../components/ExpenseList'
 import { calculateBudgetProjection } from '../utils/calculations'
@@ -65,23 +64,6 @@ export default function Dashboard() {
       </div>
 
       <div className="card">
-        <div className="card-title">Prognose Reiseende</div>
-        <div style={{ fontFamily: 'var(--font-numeric)', fontSize: 28, fontWeight: 700, color: 'var(--color-primary)' }}>
-          {formatCHF(projection.projectedTotal)}
-        </div>
-        <div style={{ marginTop: 10 }}>
-          <StatusBadge status={projection.status} />
-        </div>
-        <div style={{ marginTop: 10, fontSize: 13, color: 'var(--color-text-muted)' }}>
-          {projection.projectedDifference >= 0
-            ? `${formatCHF(projection.projectedDifference)} unter Budget`
-            : `Voraussichtlich ${formatCHF(Math.abs(projection.projectedDifference))} über Budget`}
-          {' · '}
-          {projection.daysElapsed} von {projection.daysTotal} Tagen
-        </div>
-      </div>
-
-      <div className="card">
         <div className="card-title">
           Heute · {new Date().toLocaleDateString('de-CH', { day: '2-digit', month: 'long' })}
         </div>
@@ -93,7 +75,14 @@ export default function Dashboard() {
               <ExpenseRow
                 key={e.id}
                 expense={e}
-                category={settings.categories.find((c) => c.id === e.categoryId) ?? { id: e.categoryId, label: e.categoryId, icon: '🧾', isDefault: false }}
+                category={
+                  settings.categories.find((c) => c.id === e.categoryId) ?? {
+                    id: e.categoryId,
+                    label: e.categoryId,
+                    icon: '🧾',
+                    isDefault: false
+                  }
+                }
               />
             ))}
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 4px 0', fontWeight: 700 }}>
