@@ -122,27 +122,42 @@ export default function SettingsPage() {
           ))}
         <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 4 }}>
           Kurse gelten für neu erfasste Ausgaben. Bereits gespeicherte Ausgaben behalten ihren ursprünglichen Kurs.
+          Tipp: Kurs inkl. Fremdwährungsgebühr deiner Karte eintragen und nach der ersten Kartenabrechnung
+          kalibrieren (CHF-Belastung ÷ OMR-Betrag). Einzelne Ausgaben können zusätzlich mit dem effektiv belasteten
+          CHF-Betrag erfasst werden.
         </p>
       </div>
 
       <div className="card settings-section">
         <div className="card-title">Kategorien</div>
+        <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 10 }}>
+          Antippen, um eine Kategorie als <strong>Fixkosten</strong> 📌 zu markieren. Fixkosten zählen ins Total, aber
+          nicht in den Tagesschnitt und die Prognose. Alles, was vor Reisebeginn datiert ist, zählt automatisch als
+          Vorab-Kosten.
+        </p>
         <div className="category-grid">
           {settings.categories.map((c) => (
-            <div className="category-option" key={c.id} style={{ cursor: 'default' }}>
+            <button
+              type="button"
+              className={`category-option ${c.fixed ? 'selected' : ''}`}
+              key={c.id}
+              onClick={() =>
+                updateSettings({
+                  categories: settings.categories.map((x) => ({ ...x, fixed: x.id === c.id ? !c.fixed : x.fixed === true }))
+                })
+              }
+            >
               <span className="icon">{c.icon}</span>
               <span>{c.label}</span>
-            </div>
+              {c.fixed && <span className="chip-toggle on">📌 Fix</span>}
+            </button>
           ))}
         </div>
-        <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 10 }}>
-          Eigene Kategorien lassen sich in einer späteren Version ergänzen.
-        </p>
       </div>
 
       <div className="card settings-section">
         <div className="card-title">Daten</div>
-        <button className="btn btn-secondary" style={{ marginBottom: 10 }} onClick={() => exportCSV(expenses, settings.categories, trip.name)}>
+        <button className="btn btn-secondary" style={{ marginBottom: 10 }} onClick={() => exportCSV(expenses, settings.categories, trip)}>
           CSV exportieren
         </button>
         <button className="btn btn-secondary" style={{ marginBottom: 10 }} onClick={() => exportJSON(state)}>

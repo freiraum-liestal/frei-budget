@@ -22,6 +22,9 @@ export interface Category {
   icon: string
   /** true = vom System vorgegeben, kann nicht gelöscht werden */
   isDefault: boolean
+  /** true = Fix-/Vorab-Kosten (z.B. Flug, Mietwagen): zählen ins Total,
+   *  aber nicht in den Tagesschnitt und die Prognose */
+  fixed?: boolean
 }
 
 export interface Expense {
@@ -74,9 +77,18 @@ export interface BudgetProjection {
   daysElapsed: number
   daysRemaining: number
   spent: number
+  /** Vorab-/Fixkosten (vor Reisebeginn datiert oder Fixkosten-Kategorie) */
+  fixedSpent: number
+  /** Laufende Reisekosten = spent - fixedSpent */
+  variableSpent: number
   remaining: number
   usagePercent: number
   averagePerDay: number
+  /** Was pro Tag ab heute (inkl. heute) noch ausgegeben werden kann */
   dailyBudgetRemaining: number
+  /** Laufende Ausgaben von heute */
+  todayVariableSpent: number
+  /** dailyBudgetRemaining - heutige laufende Ausgaben */
+  todayRemaining: number
   status: BudgetStatus
 }

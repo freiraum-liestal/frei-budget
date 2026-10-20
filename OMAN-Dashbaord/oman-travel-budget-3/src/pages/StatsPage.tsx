@@ -33,10 +33,10 @@ export default function StatsPage() {
     )
   }
 
-  const projection = calculateBudgetProjection(trip, expenses)
+  const projection = calculateBudgetProjection(trip, expenses, settings.categories)
   const catTotals = categoryTotals(expenses)
-  const daily = dailyTotals(expenses)
-  const timeline = budgetTimeline(trip, expenses)
+  const daily = dailyTotals(expenses, trip, settings.categories)
+  const timeline = budgetTimeline(trip, expenses, settings.categories)
   const biggest = largestExpenses(expenses, 5)
 
   const categoryLabel = (id: string) => settings.categories.find((c) => c.id === id)?.label ?? id
@@ -56,7 +56,31 @@ export default function StatsPage() {
         <div className="stat-card">
           <div className="label">Ø pro Tag</div>
           <div className="value">{formatCHF(projection.averagePerDay)}</div>
+          <div className="hint">ohne Vorab/Fix</div>
         </div>
+      </div>
+
+      <div className="card">
+        <div className="card-title">Vorab-/Fixkosten vs. laufende Kosten</div>
+        {[
+          { label: '📌 Vorab / Fix', value: projection.fixedSpent },
+          { label: '🧾 Laufend auf der Reise', value: projection.variableSpent }
+        ].map((row) => (
+          <div className="category-bar-row" key={row.label}>
+            <div className="top">
+              <span className="name">{row.label}</span>
+              <span>
+                {formatCHF(row.value)} · {projection.spent > 0 ? Math.round((row.value / projection.spent) * 1000) / 10 : 0}%
+              </span>
+            </div>
+            <div className="category-bar-track">
+              <div className="category-bar-fill" style={{ width: `${projection.spent > 0 ? (row.value / projection.spent) * 100 : 0}%` }} />
+            </div>
+          </div>
+        ))}
+        <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 8 }}>
+          Vorab/Fix = vor Reisebeginn datiert oder Kategorie als Fixkosten markiert (Einstellungen → Kategorien).
+        </p>
       </div>
 
       <div className="card">
@@ -89,7 +113,7 @@ export default function StatsPage() {
       </div>
 
       <div className="card">
-        <div className="card-title">Ausgaben pro Tag</div>
+        <div className="card-title">Laufende Ausgaben pro Tag</div>
         <ResponsiveContainer width="100%" height={200}>
           <BarChart data={daily.map((d) => ({ ...d, label: shortDate(d.date) }))}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E4E7EC" />

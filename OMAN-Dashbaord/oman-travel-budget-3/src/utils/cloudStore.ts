@@ -1,6 +1,6 @@
 import { supabase } from './supabaseClient'
 import type { AppSettings, Expense, Trip } from '../types'
-import { DEFAULT_CATEGORIES } from './defaults'
+import { DEFAULT_CATEGORIES, normalizeCategories } from './defaults'
 
 // ============================================================================
 // Mapping zwischen App-Modell (camelCase) und Supabase-Tabellen (snake_case)
@@ -52,7 +52,7 @@ function tripFromRow(row: TripRow): { trip: Trip; settings: AppSettings } {
     },
     settings: {
       exchangeRates: row.exchange_rates,
-      categories: row.categories?.length ? row.categories : DEFAULT_CATEGORIES,
+      categories: normalizeCategories(row.categories?.length ? row.categories : DEFAULT_CATEGORIES),
       activeCurrencies: row.active_currencies
     }
   }
