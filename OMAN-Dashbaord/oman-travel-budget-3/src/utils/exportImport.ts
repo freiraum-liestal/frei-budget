@@ -1,17 +1,19 @@
-import type { AppState, Category, Expense } from '../types'
+import type { AppState, Category, Expense, Trip } from '../types'
+import { isFixedCost } from './calculations'
 
 function categoryLabel(categories: Category[], id: string): string {
   return categories.find((c) => c.id === id)?.label ?? id
 }
 
-export function expensesToCSV(expenses: Expense[], categories: Category[]): string {
-  const header = ['Datum', 'Beschreibung', 'Kategorie', 'Originalbetrag', 'Originalwährung', 'Wechselkurs', 'CHF-Betrag']
+export function expensesToCSV(expenses: Expense[], categories: Category[], trip: Trip): string {
+  const header = ['Datum', 'Beschreibung', 'Kategorie', 'Typ', 'Originalbetrag', 'Originalwährung', 'Wechselkurs', 'CHF-Betrag']
   const rows = [...expenses]
     .sort((a, b) => a.date.localeCompare(b.date))
     .map((e) => [
       e.date,
       csvEscape(e.description),
       csvEscape(categoryLabel(categories, e.categoryId)),
+      isFixedCost(e, trip, categories) ? 'Vorab/Fix' : 'Laufend',
       e.originalAmount.toString(),
       e.originalCurrency,
       e.exchangeRate.toString(),
@@ -39,8 +41,9 @@ export function downloadFile(content: string, filename: string, mimeType: string
   URL.revokeObjectURL(url)
 }
 
-export function exportCSV(expenses: Expense[], categories: Category[], tripName: string) {
-  const csv = expensesToCSV(expenses, categories)
+export function exportCSV(expenses: Expense[], categories: Category[], trip: Trip) {
+  const tripName = trip.name
+  const csv = expensesToCSV(expenses, categories, trip)
   // BOM für korrekte Umlaute-Darstellung in Excel
   downloadFile('\uFEFF' + csv, `${slugify(tripName)}-ausgaben.csv`, 'text/csv;charset=utf-8')
 }

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react'
 import type { AppSettings, AppState, Expense, Trip } from '../types'
-import { createDemoExpenses, createInitialState } from '../utils/defaults'
+import { createDemoExpenses, createInitialState, normalizeCategories } from '../utils/defaults'
 import { dataStore } from '../utils/storage'
 import { getRate } from '../utils/currency'
 import { isCloudConfigured } from '../utils/supabaseClient'
@@ -87,6 +87,17 @@ function mergeWithServer(prev: AppState, bundle: CloudTripBundle, pendingDeletes
   return { trip: bundle.trip, settings: bundle.settings, expenses: [...fromServer, ...localPending] }
 }
 
+function withNormalizedCategories(s: AppState): AppState {
+  return { ...s, settings: { ...s.settings, categories: normalizeCategories(s.settings.categories ?? []) } }
+}
+
+/** Effektiv belasteter CHF-Betrag (z.B. von der Kreditkartenabrechnung)
+ *  überschreibt den Kurs aus den Einstellungen: Der effektive Kurs wird
+ *  gespeichert, damit Betrag × Kurs = CHF immer stimmt. */
+function effectiveRate(originalAmount: number, chargedCHF: number): number {
+  return Math.round((chargedCHF / originalAmount) * 1e6) / 1e6
+}
+
 export type SyncStatus = 'local' | 'connecting' | 'synced' | 'offline'
 
 interface AppContextValue {
@@ -103,8 +114,10 @@ interface AppContextValue {
     categoryId: string
     originalAmount: number
     originalCurrency: string
+    /** optional: tatsächlich belasteter CHF-Betrag */
+    chargedCHF?: number
   }) => Promise<void>
-  updateExpense: (expense: Expense) => Promise<void>
+  updateExpense: (expense: Expense, chargedCHF?: number) => Promise<void>
   deleteExpense: (id: string) => Promise<void>
   updateTrip: (patch: Partial<Trip>) => Promise<void>
   updateSettings: (patch: Partial<AppSettings>) => Promise<void>
@@ -123,7 +136,7 @@ const AppContext = createContext<AppContextValue | undefined>(undefined)
 const OFFLINE_MESSAGE = 'Offline – Änderungen sind auf diesem Gerät gespeichert und werden automatisch synchronisiert.'
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<AppState>(() => dataStore.load() ?? createInitialState())
+  const [state, setState] = useState<AppState>(() => withNormalizedCategories(dataStore.load() ?? createInitialState()))
   const [session, setSessionState] = useState<CloudSession | null>(() => (isCloudConfigured ? loadCloudSession() : null))
   const [syncStatus, setSyncStatus] = useState<SyncStatus>(() => (isCloudConfigured && loadCloudSession() ? 'connecting' : 'local'))
   const [syncError, setSyncError] = useState<string | null>(null)
@@ -290,15 +303,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     accessCode: session?.accessCode ?? null,
     pendingCount,
 
-    addExpense: async (input) => {
-      const rate = getRate(stateRef.current.settings.exchangeRates, input.originalCurrency)
+    addExpense: async ({ chargedCHF, ...input }) => {
+      const rate =
+        chargedCHF && chargedCHF > 0
+          ? effectiveRate(input.originalAmount, chargedCHF)
+          : getRate(stateRef.current.settings.exchangeRates, input.originalCurrency)
       const now = new Date().toISOString()
       const newExpense: Expense = {
         ...input,
         id: crypto.randomUUID(),
         tripId: sessionRef.current?.tripId ?? stateRef.current.trip.id,
         exchangeRate: rate,
-        amountCHF: round2(input.originalAmount * rate),
+        amountCHF: chargedCHF && chargedCHF > 0 ? round2(chargedCHF) : round2(input.originalAmount * rate),
         createdAt: now,
         updatedAt: now,
         ownerId: 'shared',
@@ -312,18 +328,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
     },
 
-    updateExpense: async (expense) => {
+    updateExpense: async (expense, chargedCHF) => {
       const original = stateRef.current.expenses.find((e) => e.id === expense.id)
       // Buchhaltung: Der Kurs der Erfassung bleibt fix. Nur bei Währungswechsel
-      // wird der aktuelle Kurs aus den Einstellungen verwendet.
-      const rate =
-        original && original.originalCurrency === expense.originalCurrency
+      // wird der aktuelle Kurs aus den Einstellungen verwendet. Ein effektiv
+      // belasteter CHF-Betrag hat immer Vorrang.
+      const hasCharged = chargedCHF !== undefined && chargedCHF > 0
+      const rate = hasCharged
+        ? effectiveRate(expense.originalAmount, chargedCHF)
+        : original && original.originalCurrency === expense.originalCurrency
           ? original.exchangeRate
           : getRate(stateRef.current.settings.exchangeRates, expense.originalCurrency)
       const updated: Expense = {
         ...expense,
         exchangeRate: rate,
-        amountCHF: round2(expense.originalAmount * rate),
+        amountCHF: hasCharged ? round2(chargedCHF) : round2(expense.originalAmount * rate),
         updatedAt: new Date().toISOString(),
         pendingSync: Boolean(sessionRef.current)
       }
@@ -384,7 +403,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setSyncError(null)
       setState(createInitialState())
     },
-    importState: (imported) => setState(imported),
+    importState: (imported) => setState(withNormalizedCategories(imported)),
 
     joinTrip: async (code) => {
       const previousStatus = syncStatus

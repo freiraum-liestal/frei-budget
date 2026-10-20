@@ -2,8 +2,8 @@ import type { AppSettings, AppState, Category, Trip } from '../types'
 import { localISODate } from './date'
 
 export const DEFAULT_CATEGORIES: Category[] = [
-  { id: 'flug', label: 'Flug', icon: '✈️', isDefault: true },
-  { id: 'mietwagen', label: 'Mietwagen', icon: '🚗', isDefault: true },
+  { id: 'flug', label: 'Flug', icon: '✈️', isDefault: true, fixed: true },
+  { id: 'mietwagen', label: 'Mietwagen', icon: '🚗', isDefault: true, fixed: true },
   { id: 'benzin', label: 'Benzin', icon: '⛽', isDefault: true },
   { id: 'hotel', label: 'Hotel', icon: '🏨', isDefault: true },
   { id: 'essen', label: 'Essen', icon: '🍽️', isDefault: true },
@@ -16,6 +16,17 @@ export const DEFAULT_CATEGORIES: Category[] = [
   { id: 'telefon', label: 'Telefon / Internet', icon: '📱', isDefault: true },
   { id: 'sonstiges', label: 'Sonstiges', icon: '🧾', isDefault: true }
 ]
+
+const DEFAULT_FIXED_IDS = new Set(DEFAULT_CATEGORIES.filter((c) => c.fixed).map((c) => c.id))
+
+/** Ältere Daten kennen das Feld `fixed` noch nicht: dann Standard (Flug,
+ *  Mietwagen) anwenden. Sobald einmal in den Einstellungen umgeschaltet wurde,
+ *  gelten die gespeicherten Werte. */
+export function normalizeCategories(categories: Category[]): Category[] {
+  const hasExplicit = categories.some((c) => typeof c.fixed === 'boolean')
+  if (hasExplicit) return categories
+  return categories.map((c) => ({ ...c, fixed: DEFAULT_FIXED_IDS.has(c.id) }))
+}
 
 export function createDefaultTrip(): Trip {
   const now = new Date()

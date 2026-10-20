@@ -12,7 +12,7 @@ function todayISO() {
 export default function Dashboard() {
   const { state } = useApp()
   const { trip, expenses, settings } = state
-  const projection = calculateBudgetProjection(trip, expenses)
+  const projection = calculateBudgetProjection(trip, expenses, settings.categories)
 
   const today = todayISO()
   const todaysExpenses = expenses.filter((e) => e.date === today)
@@ -51,16 +51,23 @@ export default function Dashboard() {
             <div className="value">{formatCHF(projection.remaining)}</div>
           </div>
         </div>
+        {projection.fixedSpent > 0 && (
+          <div className="hero-note">
+            davon Vorab/Fix {formatCHF(projection.fixedSpent)} · laufend {formatCHF(projection.variableSpent)}
+          </div>
+        )}
       </section>
 
       <div className="stat-row">
         <div className="stat-card">
           <div className="label">Tagesbudget</div>
           <div className="value">{formatCHF(projection.dailyBudgetRemaining)}</div>
+          <div className="hint">pro Tag inkl. heute</div>
         </div>
         <div className="stat-card">
           <div className="label">Ø pro Tag</div>
           <div className="value">{formatCHF(projection.averagePerDay)}</div>
+          <div className="hint">ohne Vorab/Fix</div>
         </div>
       </div>
 
@@ -91,6 +98,23 @@ export default function Dashboard() {
               <span>{formatCHF(todaysTotal)}</span>
             </div>
           </>
+        )}
+        {projection.daysElapsed > 0 && today <= trip.endDate && (
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              padding: '10px 4px 0',
+              marginTop: 8,
+              borderTop: '1px solid var(--color-border)',
+              fontSize: 14,
+              color: projection.todayRemaining < 0 ? 'var(--color-danger)' : 'var(--color-positive)',
+              fontWeight: 600
+            }}
+          >
+            <span>{projection.todayRemaining < 0 ? 'Heute über Tagesbudget' : 'Heute noch verfügbar'}</span>
+            <span>{formatCHF(Math.abs(projection.todayRemaining))}</span>
+          </div>
         )}
       </div>
     </div>

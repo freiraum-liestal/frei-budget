@@ -97,6 +97,24 @@ Kompromiss aus Einfachheit und Sicherheit.
 - Kein Passwortschutz über den Zugriffscode hinaus (siehe Sicherheitsmodell
   oben).
 
+## Buchhaltungslogik
+
+- **Vorab-/Fixkosten:** Alles, was vor Reisebeginn datiert ist (Zahlungsdatum),
+  und alles in einer als „Fixkosten“ 📌 markierten Kategorie (Standard: Flug,
+  Mietwagen; umschaltbar unter Einstellungen → Kategorien) zählt ins Total,
+  aber **nicht** in den Ø pro Tag und die Prognose.
+- **Tagesbudget** = (Budget − alle Ausgaben ausser den heutigen laufenden) ÷
+  verbleibende Tage **inkl. heute**. „Heute noch verfügbar“ zieht die
+  heutigen Ausgaben davon ab.
+- **Effektiv belastet (CHF):** Optionales Feld bei Fremdwährung. Ist es
+  ausgefüllt, zählt dieser Betrag (inkl. Kartengebühren), und der effektive
+  Kurs wird gespeichert, sodass Betrag × Kurs = CHF immer stimmt.
+- **Bargeld:** Bancomat-Bezüge nicht erfassen, nur die Bar-Ausgaben; die
+  Bezugsgebühr unter „Gebühren“.
+- CSV-Export enthält eine Spalte „Typ“ (Vorab/Fix bzw. Laufend).
+- Keine Datenbankänderung nötig: Die Fixkosten-Markierung liegt im
+  bestehenden `categories`-JSON des Trips.
+
 ## 4. Später auf echten Login umsteigen
 
 Der aktuelle Zugriffscode-Ansatz (Abschnitt 3) ist bewusst einfach gehalten.
