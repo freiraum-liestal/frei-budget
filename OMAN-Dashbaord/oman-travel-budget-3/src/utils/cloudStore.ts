@@ -128,8 +128,10 @@ export async function createCloudTrip(seed: { trip: Trip; settings: AppSettings;
     throw new CloudError(`Trip konnte nicht erstellt werden: ${tripError?.message ?? 'unbekannter Fehler'}`)
   }
 
-  if (seed.expenses.length > 0) {
-    const rows = seed.expenses.map((e) => ({
+  // Demo-Daten nie in die Cloud übernehmen
+  const realExpenses = seed.expenses.filter((e) => !e.id.startsWith('demo-'))
+  if (realExpenses.length > 0) {
+    const rows = realExpenses.map((e) => ({
       trip_id: tripRow.id,
       date: e.date,
       description: e.description,
@@ -182,36 +184,16 @@ export async function joinCloudTrip(accessCode: string): Promise<CloudTripBundle
   }
 }
 
-export async function cloudAddExpense(
-  tripId: string,
-  input: { id: string; date: string; description: string; categoryId: string; originalAmount: number; originalCurrency: string; exchangeRate: number; amountCHF: number }
-): Promise<Expense> {
+/** Speichert eine Ausgabe (neu oder geändert). Idempotent: Wenn ein früherer
+ *  Versuch beim Server angekommen ist, aber die Antwort verloren ging (wackliges
+ *  Netz), überschreibt der nächste Versuch dieselbe Zeile statt am
+ *  Primary Key zu scheitern. */
+export async function cloudUpsertExpense(expense: Expense): Promise<void> {
   const client = requireClient()
-  const { data, error } = await client
-    .from('expenses')
-    .insert({
-      id: input.id,
-      trip_id: tripId,
-      date: input.date,
-      description: input.description,
-      category_id: input.categoryId,
-      original_amount: input.originalAmount,
-      original_currency: input.originalCurrency,
-      exchange_rate: input.exchangeRate,
-      amount_chf: input.amountCHF
-    })
-    .select()
-    .single()
-
-  if (error || !data) throw new CloudError(`Ausgabe konnte nicht gespeichert werden: ${error?.message}`)
-  return expenseFromRow(data as ExpenseRow)
-}
-
-export async function cloudUpdateExpense(expense: Expense): Promise<void> {
-  const client = requireClient()
-  const { error } = await client
-    .from('expenses')
-    .update({
+  const { error } = await client.from('expenses').upsert(
+    {
+      id: expense.id,
+      trip_id: expense.tripId,
       date: expense.date,
       description: expense.description,
       category_id: expense.categoryId,
@@ -219,10 +201,10 @@ export async function cloudUpdateExpense(expense: Expense): Promise<void> {
       original_currency: expense.originalCurrency,
       exchange_rate: expense.exchangeRate,
       amount_chf: expense.amountCHF
-    })
-    .eq('id', expense.id)
-
-  if (error) throw new CloudError(`Ausgabe konnte nicht aktualisiert werden: ${error.message}`)
+    },
+    { onConflict: 'id' }
+  )
+  if (error) throw new CloudError(`Ausgabe konnte nicht gespeichert werden: ${error.message}`)
 }
 
 export async function cloudDeleteExpense(id: string): Promise<void> {

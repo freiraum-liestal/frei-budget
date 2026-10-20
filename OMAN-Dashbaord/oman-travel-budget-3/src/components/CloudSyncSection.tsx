@@ -67,12 +67,14 @@ export default function CloudSyncSection() {
     setConfirmLeave(false)
   }
 
-  if (syncStatus === 'synced' && accessCode) {
+  if (accessCode) {
     return (
       <div className="card settings-section">
         <div className="card-title">Cloud-Synchronisierung</div>
         <p style={{ fontSize: 14, marginBottom: 12 }}>
-          Dieser Trip wird live mit allen synchronisiert, die diesen Code verwenden.
+          {syncStatus === 'offline'
+            ? 'Gerade offline – alles wird auf diesem Gerät gespeichert und automatisch synchronisiert, sobald wieder Netz da ist.'
+            : 'Dieser Trip wird live mit allen synchronisiert, die diesen Code verwenden.'}
         </p>
         <div
           style={{
@@ -122,7 +124,6 @@ export default function CloudSyncSection() {
           </button>
         </div>
         {joinError && <div className="form-error">{joinError}</div>}
-        {syncStatus === 'error' && syncError && <div className="form-error">{syncError}</div>}
       </div>
 
       <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: 16 }}>

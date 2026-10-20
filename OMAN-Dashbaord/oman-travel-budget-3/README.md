@@ -85,13 +85,15 @@ Kompromiss aus Einfachheit und Sicherheit.
 
 - Kein Konfliktmanagement, wenn beide gleichzeitig offline dieselbe Ausgabe
   bearbeiten – der letzte Schreibvorgang gewinnt.
-- **Neue Ausgaben** gehen bei fehlender Verbindung nicht verloren: Sie werden
-  sofort lokal angezeigt (⏳-Symbol) und automatisch nachsynchronisiert,
-  sobald wieder Internet da ist (oder über "Erneut versuchen" manuell).
-- **Bearbeitungen und Löschungen** einer bestehenden Ausgabe haben dieses
-  Nachhol-Verhalten noch nicht – bei fehlender Verbindung erscheint ein
-  Fehler, die Änderung muss dann manuell wiederholt werden, sobald wieder
-  Netz da ist.
+- **Offline-first:** Alles wird immer zuerst auf dem Gerät gespeichert –
+  auch im Cloud-Modus. Neue, bearbeitete und gelöschte Ausgaben ohne Netz
+  erscheinen sofort (⏳-Hinweis) und werden automatisch synchronisiert, sobald
+  wieder Internet da ist (beim Zurückkehren in die App, alle 20 s solange etwas
+  offen ist, oder über "Jetzt syncen"). Das überlebt auch, wenn iOS die App
+  im Hintergrund beendet. Nach dem Sync wird der Stand neu geladen, damit
+  Ausgaben der Partnerin, die man offline verpasst hat, sichtbar werden.
+- Reisename, Budget und Kurse werden (noch) nicht nachsynchronisiert, wenn sie
+  offline geändert werden – das am besten mit Netz erledigen.
 - Kein Passwortschutz über den Zugriffscode hinaus (siehe Sicherheitsmodell
   oben).
 

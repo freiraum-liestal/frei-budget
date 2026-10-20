@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useApp } from '../context/AppContext'
+import { localISODate } from '../utils/date'
 import { useUI } from '../context/UIContext'
 import { convertToCHF, formatCHF } from '../utils/currency'
 
 function todayISO() {
-  return new Date().toISOString().slice(0, 10)
+  return localISODate()
 }
 
 export default function ExpenseSheet() {
@@ -40,7 +41,9 @@ export default function ExpenseSheet() {
 
   if (!isSheetOpen) return null
 
-  const numericAmount = parseFloat(amount.replace(',', '.'))
+  // Akzeptiert "12.5", "12,5", "1'250.00" und "1 250" – egal welche iPhone-Tastatur.
+  const normalized = amount.trim().replace(/['’\s]/g, '').replace(',', '.')
+  const numericAmount = /^\d*\.?\d*$/.test(normalized) && normalized !== '' && normalized !== '.' ? parseFloat(normalized) : NaN
   const previewCHF = !isNaN(numericAmount) ? convertToCHF(numericAmount, currency, state.settings.exchangeRates) : null
 
   async function handleSave() {
@@ -93,9 +96,9 @@ export default function ExpenseSheet() {
           <div className="amount-input-row">
             <input
               className={`form-input ${error ? 'error' : ''}`}
-              type="number"
+              type="text"
               inputMode="decimal"
-              step="0.001"
+              autoComplete="off"
               placeholder="0.00"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
