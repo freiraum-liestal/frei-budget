@@ -1,11 +1,12 @@
 import { useApp } from '../context/AppContext'
+import { localISODate } from '../utils/date'
 import SyncBadge from '../components/SyncBadge'
 import { ExpenseRow } from '../components/ExpenseList'
 import { calculateBudgetProjection } from '../utils/calculations'
 import { formatCHF } from '../utils/currency'
 
 function todayISO() {
-  return new Date().toISOString().slice(0, 10)
+  return localISODate()
 }
 
 export default function Dashboard() {

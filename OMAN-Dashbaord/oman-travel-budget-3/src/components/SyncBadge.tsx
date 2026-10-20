@@ -1,16 +1,14 @@
 import { useApp } from '../context/AppContext'
 
 export default function SyncBadge() {
-  const { syncStatus, syncError, state, retryPendingSync } = useApp()
+  const { syncStatus, syncError, pendingCount, retryPendingSync } = useApp()
 
   if (syncStatus === 'local') return null
-
-  const pendingCount = state.expenses.filter((e) => e.pendingSync).length
 
   const config = {
     connecting: { icon: '☁️', label: 'Verbinde…', color: 'var(--color-text-muted)' },
     synced: { icon: '🟢', label: 'Synchronisiert', color: 'var(--color-positive)' },
-    error: { icon: '⚠️', label: 'Sync-Fehler', color: 'var(--color-danger)' }
+    offline: { icon: '📴', label: 'Offline', color: 'var(--color-warning)' }
   }[syncStatus]
 
   return (
@@ -18,11 +16,8 @@ export default function SyncBadge() {
       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 600, color: config.color, marginTop: 4 }}>
         <span>{config.icon}</span>
         <span>{config.label}</span>
-        {syncStatus === 'error' && syncError && (
-          <span style={{ color: 'var(--color-text-muted)', fontWeight: 400 }}>· {syncError}</span>
-        )}
       </div>
-      {pendingCount > 0 && (
+      {(pendingCount > 0 || (syncStatus === 'offline' && syncError)) && (
         <div
           style={{
             marginTop: 6,
@@ -37,10 +32,12 @@ export default function SyncBadge() {
           }}
         >
           <span>
-            ⏳ {pendingCount} Ausgabe{pendingCount > 1 ? 'n' : ''} noch nicht synchronisiert (kein Netz?)
+            {pendingCount > 0
+              ? `⏳ ${pendingCount} Änderung${pendingCount > 1 ? 'en' : ''} auf dem Gerät gespeichert, noch nicht synchronisiert`
+              : syncError}
           </span>
-          <button className="btn-text" style={{ padding: 0, fontSize: 12 }} onClick={() => retryPendingSync()}>
-            Erneut versuchen
+          <button className="btn-text" style={{ padding: 0, fontSize: 12, whiteSpace: 'nowrap' }} onClick={() => retryPendingSync()}>
+            Jetzt syncen
           </button>
         </div>
       )}

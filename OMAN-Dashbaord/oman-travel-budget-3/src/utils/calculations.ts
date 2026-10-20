@@ -1,8 +1,8 @@
 import type { BudgetProjection, BudgetStatus, Expense, Trip } from '../types'
+import { addDaysISO, localISODate, parseLocalDate } from './date'
 
 function toDateOnly(iso: string): Date {
-  const d = new Date(iso + 'T00:00:00')
-  return d
+  return parseLocalDate(iso)
 }
 
 function daysBetweenInclusive(start: Date, end: Date): number {
@@ -15,7 +15,7 @@ function daysBetweenInclusive(start: Date, end: Date): number {
 export function calculateBudgetProjection(trip: Trip, expenses: Expense[]): BudgetProjection {
   const start = toDateOnly(trip.startDate)
   const end = toDateOnly(trip.endDate)
-  const today = toDateOnly(new Date().toISOString().slice(0, 10))
+  const today = toDateOnly(localISODate())
 
   const daysTotal = daysBetweenInclusive(start, end)
 
@@ -121,9 +121,7 @@ export function budgetTimeline(trip: Trip, expenses: Expense[]): { date: string;
   const result: { date: string; spent: number; budgetLine: number }[] = []
 
   for (let i = 0; i < totalDays; i++) {
-    const d = new Date(start)
-    d.setDate(d.getDate() + i)
-    const iso = d.toISOString().slice(0, 10)
+    const iso = addDaysISO(trip.startDate, i)
     cumulative += dailyMap.get(iso) ?? 0
     result.push({ date: iso, spent: round2(cumulative), budgetLine: round2(dailyBudgetLine * (i + 1)) })
   }

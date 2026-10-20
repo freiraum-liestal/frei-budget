@@ -1,4 +1,5 @@
 import type { AppSettings, AppState, Category, Trip } from '../types'
+import { localISODate } from './date'
 
 export const DEFAULT_CATEGORIES: Category[] = [
   { id: 'flug', label: 'Flug', icon: '✈️', isDefault: true },
@@ -20,7 +21,7 @@ export function createDefaultTrip(): Trip {
   const now = new Date()
   const start = new Date(now.getFullYear(), 0, 1)
   const end = new Date(now.getFullYear(), 0, 14)
-  const iso = (d: Date) => d.toISOString().slice(0, 10)
+  const iso = (d: Date) => localISODate(d)
   return {
     id: 'trip-oman-2026',
     name: 'Oman 2026',
@@ -62,7 +63,7 @@ export function createDemoExpenses(tripId: string): AppState['expenses'] {
   const daysAgo = (n: number) => {
     const d = new Date(today)
     d.setDate(d.getDate() - n)
-    return d.toISOString().slice(0, 10)
+    return localISODate(d)
   }
   const mk = (
     id: string,
